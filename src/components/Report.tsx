@@ -1,15 +1,71 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { WeeklySummary } from '../types'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import { sendWeeklyReportEmailAsync, sendMonthlyReportEmailAsync } from '../utils'
 
 interface ReportProps {
   summary: WeeklySummary
   title: string
+  userEmail?: string
+  username?: string
+  isMonthly?: boolean
 }
 
 const COLORS = ['#f99878', '#f5845f', '#e97047', '#c65a38', '#a3482d', '#fcc4b0', '#fdd9cc', '#fbae94']
 
-export const Report: React.FC<ReportProps> = ({ summary, title }) => {
+export const Report: React.FC<ReportProps> = ({ summary, title, userEmail, username, isMonthly }) => {
+  const [sendingEmail, setSendingEmail] = useState(false)
+  const [emailSent, setEmailSent] = useState(false)
+
+  const handleSendEmail = async () => {
+    if (!userEmail || !username) {
+      alert('请先登陆')
+      return
+    }
+
+    setSendingEmail(true)
+
+    try {
+      const topCategory = summary.categoryBreakdown[0] || null
+      let success = false
+
+      if (isMonthly) {
+        const monthStr = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long' })
+        success = await sendMonthlyReportEmailAsync(userEmail, username, {
+          month: monthStr,
+          totalExpense: summary.totalExpense,
+          totalIncome: summary.totalIncome,
+          balance: summary.balance,
+          topCategory: topCategory
+            ? { emoji: topCategory.emoji, name: topCategory.category, amount: topCategory.amount }
+            : null,
+          transactionCount: summary.dailyBreakdown.reduce((sum, d) => sum + d.transactions.length, 0),
+        })
+      } else {
+        success = await sendWeeklyReportEmailAsync(userEmail, username, {
+          weekStart: summary.weekStart,
+          weekEnd: summary.weekEnd,
+          totalExpense: summary.totalExpense,
+          totalIncome: summary.totalIncome,
+          balance: summary.balance,
+          topCategory: topCategory
+            ? { emoji: topCategory.emoji, name: topCategory.category, amount: topCategory.amount }
+            : null,
+        })
+      }
+
+      if (success) {
+        setEmailSent(true)
+        setTimeout(() => setEmailSent(false), 3000)
+      }
+    } catch (error) {
+      console.error('Error sending email:', error)
+      alert('邮件发送失败，请重试')
+    } finally {
+      setSendingEmail(false)
+    }
+  }
+
   const chartData = summary.dailyBreakdown.map(daily => ({
     date: daily.date.split('-')[2],
     支出: daily.expenses,
@@ -56,10 +112,30 @@ export const Report: React.FC<ReportProps> = ({ summary, title }) => {
   return (
     <div className="space-y-6">
       <div className="card-cute">
-        <h2 className="text-2xl font-bold text-warm-pink-700 mb-2">📊 {title}</h2>
-        <p className="text-sm text-gray-500 mb-6">
-          {summary.weekStart} 至 {summary.weekEnd}
-        </p>
+        <div className="flex items-center justify-between mb-6 pb-4 border-b-2 border-soft-pink/30">
+          <div>
+            <h2 className="text-2xl font-bold text-warm-pink-700 mb-2">📊 {title}</h2>
+            <p className="text-sm text-gray-500">
+              {summary.weekStart} 至 {summary.weekEnd}
+            </p>
+          </div>
+          {userEmail && username && (
+            <div className="relative">
+              <button
+                onClick={handleSendEmail}
+                disabled={sendingEmail}
+                className={`btn-secondary whitespace-nowrap ${sendingEmail ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {sendingEmail ? '📧 发送中...' : '📧 邮件'}
+              </button>
+              {emailSent && (
+                <div className="absolute top-full right-0 mt-2 bg-green-500 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap">
+                  ✅ 邮件已发送！
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Summary Cards */}
         <div className="grid grid-cols-3 gap-4 mb-6">

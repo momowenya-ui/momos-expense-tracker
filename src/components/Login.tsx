@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { registerUser, loginWithEmail } from '../utils'
+import { registerUser, loginWithEmail, sendWelcomeEmailAsync } from '../utils'
 import { User } from '../types'
 
 interface LoginProps {
@@ -57,6 +57,16 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
 
     const user = registerUser(email, username)
     if (user) {
+      // 异步发送欢迎邮件，不阻塞用户进入应用
+      sendWelcomeEmailAsync(email, username).then(success => {
+        if (success) {
+          console.log('✅ 欢迎邮件已发送！')
+        } else {
+          console.log('⚠️ 欢迎邮件发送失败，但账户创建成功')
+        }
+      })
+
+      // 立即进入应用
       onLoginSuccess(user)
     } else {
       setError('邮箱已被注册，请使用其他邮箱')

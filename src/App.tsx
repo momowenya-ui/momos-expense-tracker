@@ -172,11 +172,11 @@ export default function App() {
         )}
 
         {activeTab === 'week' && (
-          <Report summary={weeklySummary} title="本周报告" />
+          <Report summary={weeklySummary} title="本周报告" userEmail={user.email} username={user.username} isMonthly={false} />
         )}
 
         {activeTab === 'month' && (
-          <Report summary={monthlySummary} title="本月报告" />
+          <Report summary={monthlySummary} title="本月报告" userEmail={user.email} username={user.username} isMonthly={true} />
         )}
       </div>
 

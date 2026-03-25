@@ -343,3 +343,110 @@ export const getMonthlySummary = (date: Date = new Date()): WeeklySummary => {
     categoryBreakdown: categoryBreakdown.sort((a, b) => b.amount - a.amount),
   }
 }
+
+// ========== 邮件发送 ==========
+
+export const sendWelcomeEmailAsync = async (email: string, username: string): Promise<boolean> => {
+  try {
+    const response = await fetch('/api/send-email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        type: 'welcome',
+        email,
+        username,
+      }),
+    })
+
+    if (response.ok) {
+      console.log('Welcome email sent successfully')
+      return true
+    } else {
+      console.error('Failed to send welcome email:', response.statusText)
+      return false
+    }
+  } catch (error) {
+    console.error('Error sending welcome email:', error)
+    return false
+  }
+}
+
+export const sendWeeklyReportEmailAsync = async (
+  email: string,
+  username: string,
+  weekData: {
+    weekStart: string
+    weekEnd: string
+    totalExpense: number
+    totalIncome: number
+    balance: number
+    topCategory: { emoji: string; name: string; amount: number } | null
+  }
+): Promise<boolean> => {
+  try {
+    const response = await fetch('/api/send-email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        type: 'weekly',
+        email,
+        username,
+        weekData,
+      }),
+    })
+
+    if (response.ok) {
+      console.log('Weekly report email sent successfully')
+      return true
+    } else {
+      console.error('Failed to send weekly report email:', response.statusText)
+      return false
+    }
+  } catch (error) {
+    console.error('Error sending weekly report email:', error)
+    return false
+  }
+}
+
+export const sendMonthlyReportEmailAsync = async (
+  email: string,
+  username: string,
+  monthData: {
+    month: string
+    totalExpense: number
+    totalIncome: number
+    balance: number
+    topCategory: { emoji: string; name: string; amount: number } | null
+    transactionCount: number
+  }
+): Promise<boolean> => {
+  try {
+    const response = await fetch('/api/send-email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        type: 'monthly',
+        email,
+        username,
+        monthData,
+      }),
+    })
+
+    if (response.ok) {
+      console.log('Monthly report email sent successfully')
+      return true
+    } else {
+      console.error('Failed to send monthly report email:', response.statusText)
+      return false
+    }
+  } catch (error) {
+    console.error('Error sending monthly report email:', error)
+    return false
+  }
+}
