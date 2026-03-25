@@ -1,78 +1,8 @@
-import { Resend } from 'resend'
+// Email template functions (server-side only)
+// ⚠️ Important: These functions are ONLY used in api/send-email.ts
+// They should NOT be imported in client-side code
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
-export const sendWelcomeEmail = async (email: string, username: string) => {
-  try {
-    const result = await resend.emails.send({
-      from: 'noreply@momos-expense-tracker.com',
-      to: email,
-      subject: '🎉 欢迎加入末末记账本家族！',
-      html: getWelcomeEmailTemplate(username),
-    })
-    console.log('Welcome email sent:', result)
-    return result
-  } catch (error) {
-    console.error('Failed to send welcome email:', error)
-    throw error
-  }
-}
-
-export const sendWeeklyReportEmail = async (
-  email: string,
-  username: string,
-  weekData: {
-    weekStart: string
-    weekEnd: string
-    totalExpense: number
-    totalIncome: number
-    balance: number
-    topCategory: { emoji: string; name: string; amount: number } | null
-  }
-) => {
-  try {
-    const result = await resend.emails.send({
-      from: 'noreply@momos-expense-tracker.com',
-      to: email,
-      subject: `📊 末末记账本周报 - ${weekData.weekStart} 至 ${weekData.weekEnd}`,
-      html: getWeeklyReportEmailTemplate(username, weekData),
-    })
-    console.log('Weekly report email sent:', result)
-    return result
-  } catch (error) {
-    console.error('Failed to send weekly report email:', error)
-    throw error
-  }
-}
-
-export const sendMonthlyReportEmail = async (
-  email: string,
-  username: string,
-  monthData: {
-    month: string
-    totalExpense: number
-    totalIncome: number
-    balance: number
-    topCategory: { emoji: string; name: string; amount: number } | null
-    transactionCount: number
-  }
-) => {
-  try {
-    const result = await resend.emails.send({
-      from: 'noreply@momos-expense-tracker.com',
-      to: email,
-      subject: `📈 末末记账本月报 - ${monthData.month}`,
-      html: getMonthlyReportEmailTemplate(username, monthData),
-    })
-    console.log('Monthly report email sent:', result)
-    return result
-  } catch (error) {
-    console.error('Failed to send monthly report email:', error)
-    throw error
-  }
-}
-
-function getWelcomeEmailTemplate(username: string): string {
+export function getWelcomeEmailTemplate(username: string): string {
   return `
     <!DOCTYPE html>
     <html>
@@ -151,7 +81,7 @@ function getWelcomeEmailTemplate(username: string): string {
   `
 }
 
-function getWeeklyReportEmailTemplate(
+export function getWeeklyReportEmailTemplate(
   username: string,
   weekData: {
     weekStart: string
@@ -243,7 +173,7 @@ function getWeeklyReportEmailTemplate(
   `
 }
 
-function getMonthlyReportEmailTemplate(
+export function getMonthlyReportEmailTemplate(
   username: string,
   monthData: {
     month: string
